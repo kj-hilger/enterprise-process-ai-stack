@@ -17,7 +17,7 @@ This project showcases the integration of traditional process governance with mo
 ### Key Pillars:
 *   **Orchestration:** **Camunda 8 Self-Managed** (Zeebe Engine) provides the deterministic backbone and **full audit trails** for every AI decision – a hard requirement for compliance.
 *   **Agentic AI:** Utilization of **Ad-Hoc Subprocesses** as AI Connectors. This allows the agent to flexibly choose between Service Tasks (Tools) and Human Tasks (Escalation).
-*   **Data Sovereignty:** Local LLM inference via **LM Studio**, ensuring sensitive request data never leaves the controlled environment.
+*   **Data Sovereignty:** Local LLM inference via **Ollama**, ensuring sensitive request data never leaves the controlled environment.
 *   **Security-First:** Centralized Identity Management via **Keycloak (OIDC)**, securing all endpoints and the Camunda stack.
 
 ## 📋 Featured Use Case: "Request Processing"
@@ -26,14 +26,14 @@ The stack is demonstrated through a universal **Request Processing** workflow. I
 
 ## 🏗️ Technical Stack
 
-| Category | Technology |
-| :--- | :--- |
+| Category | Technology                                                   |
+| :--- |:-------------------------------------------------------------|
 | **Backend** | Java 21, Spring Boot 3.x, Zeebe Java Client (Worker Pattern) |
-| **BPMN / DMN** | Camunda 8 (Zeebe), modeled with Camunda Desktop Modeler |
-| **AI Orchestration** | Camunda Agentic AI Connector (Native Integration) |
-| **Storage & Data** | OpenSearch (Analytics Sink) |
-| **Security** | Keycloak (OIDC), OAuth2 |
-| **Local AI** | LM Studio (OpenAI-compatible API / GGUF) |
+| **BPMN / DMN** | Camunda 8 (Zeebe), modeled with Camunda Desktop Modeler      |
+| **AI Orchestration** | Camunda Agentic AI Connector (Native Integration)            |
+| **Storage & Data** | OpenSearch (Analytics Sink)                                  |
+| **Security** | Keycloak (OIDC), OAuth2                                      |
+| **Local AI** | Ollama (OpenAI-compatible API / GGUF)                        |
 
 ## ⚖️ Architectural Evaluation: Why no Spring AI?
 
