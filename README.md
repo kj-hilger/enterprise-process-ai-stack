@@ -19,9 +19,9 @@ This project showcases the integration of traditional process governance with mo
 *   **Data Sovereignty:** Local LLM inference via **Ollama**, ensuring sensitive request data never leaves the controlled environment.
 *   **Security-First:** Centralized Identity Management via **Keycloak (OIDC)**, securing all endpoints and the Camunda stack.
 
-## 📋 Featured Use Case: "Request Processing"
+## 📋 Featured Use Case: "Customer Inquiry Resolution"
 
-The stack is demonstrated through a universal **Request Processing** workflow. It handles the lifecycle of a digital application where an AI Agent autonomously manages missing information or document validation within a governed BPMN sub-flow, escalating to humans only when necessary. This ensures that even "creative" AI steps remain within a compliant, trackable framework.
+The stack is demonstrated through a universal **Customer Inquiry Resolution** workflow. It handles the lifecycle of a digital application where an AI Agent autonomously manages missing information or document validation within a governed BPMN sub-flow, escalating to humans only when necessary. This ensures that even "creative" AI steps remain within a compliant, trackable framework.
 
 ## 🏗️ Technical Stack
 
@@ -48,6 +48,23 @@ During the design phase, **Spring AI** was evaluated but deliberately excluded t
 - [ ] **Phase 3:** Agentic AI Connector Setup
 - [ ] **Phase 4:** Process Application (BPMN, Forms, Java Job Workers)
 
+## 🏗️ Target Runtime Environments
+
+> **"One Stack, Any Scale"**  
+> This project follows a unified GitOps approach. Whether deploying to a high-power workstation or a power-efficient edge device, the architecture remains identical, ensuring true environment parity.
+
+| Environment | Specs (Tested) | Use Case |
+| :--- | :--- | :--- |
+| **High-Power Desktop** | 64 GB RAM / 16 GB VRAM (RTX) | Development, Heavy Load Testing, Large LLMs |
+| **Edge AI (Jetson)** | 16 GB Unified Memory (Orin Nano) | Industrial Edge, Power-Efficient Sovereign AI |
+| **Minimal / Laptop** | 16 GB RAM (CPU only) | Proof of Concept, Local Process Testing |
+
+### ⚙️ Multi-Platform Strategy
+Deployment is managed via **Helm profiles** and **ArgoCD**, allowing for seamless switching between resource-constrained and high-performance hardware:
+
+*   **Resource Efficiency:** JVM and OpenSearch heap sizes are dynamically adjusted based on the target profile.
+*   **Hardware Acceleration:** Automatic detection and utilization of NVIDIA CUDA cores for LLM inference (where available).
+*   **Architecture Agnostic:** Full support for both `x86_64` and `arm64` (Multi-Arch Docker Images).
 ---
 
 Visuals created with Google Gemini.
