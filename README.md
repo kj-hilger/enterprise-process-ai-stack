@@ -43,11 +43,10 @@ During the design phase, **Spring AI** was evaluated but deliberately excluded t
 
 ## 🗺️ Roadmap
 
-- [ ] **Phase 1:** Core Container Infrastructure (Minikube & Helm)
-- [ ] **Phase 2:** Keycloak Identity Provider & OIDC Integration
-- [ ] **Phase 3:** Camunda 8 Self-Managed Deployment
-- [ ] **Phase 4:** Java Job Workers (Business APIs) & Agentic AI Connector Setup
-- [ ] **Phase 5:** Analytics Integration (OpenSearch Data Sink)
+- [ ] **Phase 1:** Kubernetes Infrastructure (Minikube, Helm, ArgoCD)
+- [ ] **Phase 2:** Camunda 8 Self-Managed Deployment & Service Provider Deployment
+- [ ] **Phase 3:** Agentic AI Connector Setup
+- [ ] **Phase 4:** Process Application (BPMN, Forms, Java Job Workers)
 
 ---
 
