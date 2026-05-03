@@ -12,7 +12,6 @@ The **Enterprise-Process-AI-Stack** is a reference architecture designed for hig
 This project showcases the integration of traditional process governance with modern Agentic AI, optimized for local or air-gapped environments to ensure maximum security.
 
 ![Target Architecture](docs/architecture/target_architecture.png)
-> *Note: This diagram was generated using a structured prompt found in `/docs/architecture`. It reflects the current state of the Agentic AI orchestration logic within a BPMN Pool.*
 
 ### Key Pillars:
 *   **Orchestration:** **Camunda 8 Self-Managed** (Zeebe Engine) provides the deterministic backbone and **full audit trails** for every AI decision – a hard requirement for compliance.
