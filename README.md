@@ -1,117 +1,195 @@
-# Sovereign Agentic Orchestration Stack 🚀
+# Sovereign Camunda Agent Stack 🚀
 
 <div align="center">
-  <img src="docs/target_architecture.png" alt="Target Architecture Diagram" width="100%">
+  <img src="docs/target-architecture.jpeg" alt="Target Architecture Diagram" width="100%">
 </div>
 
-## ⚡ Executive Summary
+## ⚡ Summary
 
-The **Sovereign-Agentic-Orchestration-Stack (SAOS)** is a reference architecture designed for highly regulated industries (FinTech, Defense, Health). It demonstrates how **Deterministic Orchestration** meets **Intelligent Execution** by bridging the gap between traditional BPMN and autonomous AI agents.
+The **Sovereign Camunda Agent Stack** is a lightweight reference architecture to install Camunda 8 Agentic AI and Ollama LLMs on your own Linux hardware with Nvidia gpu and Debian-based OS, no data leaves your network. It contains GitOps to run under Kubernetes on different hardware profiles.
 
-### 🛑 Repository Role: Documentation & Architecture Hub
-This repository serves strictly as the central **Documentation & Architecture Reference**. The actual source code is distributed across three specialized repositories, structured exactly as depicted in the diagram above:
 
-| Layer              | Responsibility                                                        | Corresponding Repo                                                   |
-|:-------------------|:----------------------------------------------------------------------|:---------------------------------------------------------------------|
-| **Process Logic**  | Business BPMN, AI Prompts, Human-in-the-Loop workflows.               | `agentic-orchestrator`                                               |
-| **Platform Ops**   | GitOps pipelines (ArgoCD), Deployments (Camunda, Keycloak, Ollama).   | [cluster-gitops](https://github.com/kj-hilger/cluster-gitops)        |
-| **Infrastructure** | K3s/Helm charts, NVIDIA GPU bootstrapping, Resource profiling.        | [sovereign-infra](https://github.com/kj-hilger/sovereign-infra)      |
+## 🚀 Roadmap & Phases
 
-*   **Status:** 🚧 Work in Progress
-*   **Goal:** Demonstrating secure, scalable, and auditable AI orchestration using an **"Adaptive Case Management 2.0"** approach with 100% data sovereignty.
+- **Sovereign Infra:** under test
+- **Cluster Gitops:** under development
+- **Camunda Process:** Planned
 
-## 🔍 Key Feature: Agent Explainability (Decision Trail)
 
-In regulated environments, the "Black Box" nature of AI is the primary blocker for production adoption. This architecture explicitly addresses this by implementing a comprehensive **Decision Trail**, leveraging upcoming **Camunda 8 Governance features**.
+## 📋 Prerequisites
+- **OS:** Debian-based Linux with NVIDIA Drivers & CUDA Toolkit installed (can be verified by running `nvidia-smi`).
+- **Package Manager:** `apt` is available.
+- **Basic Tools:** `curl`, `git`, `gpg`, `sed` are installed.
+- **Kubernetes Tools:** `kubectl` is installed and available in your PATH.
+- **Connectivity:** Internet access is required during the bootstrap process.
+- **Repository:** You cloned the repo:
+```git
+git clone https://github.com/kj-hilger/sovereign-camunda-agent-stack.git
+```
 
-### The Value Proposition
-For operations engineers, compliance stakeholders, and developers, this stack transforms opaque AI actions into **auditable business processes**. Every decision made by an autonomous agent is backed by a full forensic trail.
+## 🏗 Sovereign Infra
 
-### 🛠️ Transparency & Audit Layers
-To ensure "Human-in-the-Loop" or "Human-on-the-Loop" integrity, the architecture captures:
+Scripts to install hardware specific tools for GPU support, K8s and GitOps on different hardware profiles:
 
+### Choose your profile
+
+| Environment            | Specs (Tested)                           | Use Case                                               |
+|:-----------------------|:-----------------------------------------|:-------------------------------------------------------|
+| **High-Power Desktop** | 64 GB RAM / 16 GB VRAM (RTX)             | Development, Heavy Load Testing, Large LLMs            |
+| **Edge AI (Jetson)**   | 16 GB Unified Memory (Orin Nano)         | Industrial Edge, Power-Efficient continuous operations |
+
+### Bootstrap
+
+``` bash
+### Option A: High-Power Desktop
+chmod +x ./sovereign-infra/install-desktop.sh
+./sovereign-infra/install-desktop.sh
+
+## Option B: Edge AI Jetson
+
+chmod +x ./sovereign-infra/install-jetson.sh
+./sovereign-infra/install-jetson.sh
+```
+
+Detailed documentation for Desktop
+
+| Step | Description                                                                | Key Challenges                                                                                                                                                                                 |
+|------|----------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1    | NVIDIA Driver & CUDA Check                                                 | Drivers and CUDA toolkit must be manually installed on the host OS beforehand.                                                                                                                 |
+| 2    | Installing & Configuring Docker                                            | Non-root user permissions require group modifications (`usermod`), often needing a full system logout/login before the user can interact with the Docker daemon.                               |
+| 3    | NVIDIA Container Toolkit Config                                            | Must target the **host Docker engine** specifically via direct `/etc/docker/daemon.json` configuration, **⚠️overwrites existing ⚠**, ensuring GPU runtime sharing into downstream containers. |
+| 4    | Installing Minikube & Helm                                                 | Requires a separate, native `kubectl` installation on the host OS to prevent command-not-found errors during automated script execution.                                                       |
+| 5    | Bootstrapping Minikube (Tuning)                                            | Enforces Docker runtime internally within the cluster to allow `--gpus=all`. **⚠️Allocates 32768 MB RAM and 12 CPUs. ⚠**                                                                      |
+| 6    | Installing ArgoCD                                                          | `--server-side` apply required, adds a desktop-specific patch to `NodePort` for direct access via the local web browser.                                                                       |
+
+Detailed documentation for Jetson
+
+| Step | Description                                                                | Key Challenges                                                                                                                                                                                        |
+|------|----------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| 0    | Boot Configuration & Cgroups Check                                         | Missing cgroup parameters cause memory crashes; requires reboot.                                                                                                                                      |
+| 1    | Pre-Installation Checks                                                    | Verify Jetson hardware presence. **⚠Overwrites /opt/cni/bin/ ⚠**                                                                                                                                    |
+| 2    | Installing NVIDIA Container Runtime & Network Config (containerd, flannel) | CRI unblocking and preconfiguring CNI for a stable network; aligning container runtimes with system‑wide containerd + NVIDIA runtime. **⚠fix versions for cni-plugins v1.4.0 and flannel v1.9.0 ⚠** |
+| 3    | Installing K3s                                                             | None specific; standard K3s install using containerd endpoint.                                                                                                                                        |
+| 4    | Enabling NVIDIA GPU Support in Kubernetes                                  | The Kubernetes resources for Nvidia Device Plugin fail on Jetson due to PCI‑based affinity and memory management issues, thus patches and enhancements are needed.                                    |
+| 5    | Installing ArgoCD                                                          | Annotation limits for large manifests; requires server‑side apply.                                                                                                                                    |
+| 6    | Resource Optimization                                                      | Minimizing log overhead and saving unified memory.                                                                                                                                                    |
+| 7    | Verification                                                               | Final checks; ensure GPU registration and node allocatable resources.                                                                                                                                 |
+
+
+### Post-Installation
+* The installation configures Docker to run without `sudo` for the current user. If you encounter permission issues during the Minikube bootstrap, you may need to **log out and log back in** to apply the user group changes.
+* Docker and Nvidia Toolkit will be updated via apt Package Manager.
+* Run check script:
+```bash
+### Option A: High-Power Desktop
+# No check script currently available for desktop.
+
+## Option B: Edge AI Jetson
+chmod +x ./sovereign-infra/check-jetson.sh
+sudo ./sovereign-infra/check-jetson.sh
+```
+
+### Start again after reboot
+
+```bash
+### Option A: High-Power Desktop
+minikube start \
+--driver=docker \
+--cpus=12 \
+--memory=32768 \
+--gpus=all \
+--addons=ingress
+
+## Option B: Edge AI Jetson
+# No start command currently available for jetson.
+```
+
+### Delete All and Reinstall (with latest software versions)
+
+```bash
+### Option A: High-Power Desktop
+chmod +x ./sovereign-infra/uninstall-desktop.sh
+./sovereign-infra/uninstall-desktop.sh
+
+## Option B: Edge AI Jetson
+chmod +x ./sovereign-infra/k3s-uninstall.sh  # **⚠️ deletes all content under /var/lib/docker ⚠️**
+sudo ./sovereign-infra/k3s-uninstall.sh
+
+# reboot
+
+# run bootstrap script again
+```
+
+
+## ♾️Cluster GitOps
+
+Helm-Charts to install Camunda 8 (including Camunda Agentic AI Connector, PostgreSQL, Keycloak) and Ollama (including LLM) on top of the Sovereign Infra layer with hardware profile specific values.
+
+### Bootstrap
+
+``` bash
+chmod +x ./cluster-gitops/bootstrap.sh
+./cluster-gitops/bootstrap.sh
+```
+
+Detailed documentation
+
+| Step  | Component                                     | Action & Structural Rationale                                                                                                                                                                                                                              |
+|:------|:----------------------------------------------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **1** | **Detecting project path**                    | Applying bootstrap/root-app.yaml triggers the App-of-Apps controller based on the target environment profile.                                                                                                                                              |
+| **2** | **Adding Helm repositories**                  | PostgreSQL and Keycloak are spun up first to guarantee relational data integrity and secure OIDC endpoints before the orchestrator launches.                                                                                                               |
+| **3** | **Updating Helm dependencies (Side-loading)** | This downloads the official charts and places them as archives in the automatically created folders within each application structure. These local paths are configured in ArgoCD so the system can access the components without any internet connection. |
+| **4** | **Bootstrapping ArgoCD**                      | ArgoCD continuously monitors this repository and reconciles the desired state.                                                                                                                                                                             |
+| **5** | **Retrieving Login information**              | **⚠️ Sensitive Login information is written to terminal output. ⚠️**                                                                                                                                                                                       |
+
+
+### Post-Installation
+
+ArgoCD monitors the apps and charts directories alongside the Chart.lock files. It handles the internal unzipping of the pre-loaded archives and applies the corresponding values.yaml configurations automatically. Because all dependencies are provisioned locally, the system requires no external communication with Helm repositories. To perform updates, modify the version in the Chart.yaml file, execute a local helm dependency update, and synchronize the updated files. ArgoCD then completes the reconciliation process entirely offline.
+
+
+### Delete All
+
+```bash
+chmod +x ./cluster-gitops/uninstall.sh
+sudo ./cluster-gitops/uninstall.sh
+
+# Alternative for desktop
+minikube delete --all --purge
+```
+
+
+## ⚙️Camunda Process
+
+- Leverages Camunda 8 Deterministic Orchestration to manage agentic decision flows, ensuring full process visibility and execution logging.
+- The BPMN Pattern Agentic AI as Subprocess together with a human task ensures "Human-in-the-Loop".
+- This layer is equal for all hardware profiles.
+
+### Bootstrap
+
+```
+# planned Process Name: Agentic Orchestrator
+```
+
+### Run instances
+
+```
+# planned: Link to Operate
+```
+
+### Observe Audit Trail
 *   **Prompt & Response:** Full visibility into the exact instructions and raw LLM outputs.
 *   **Reasoning Path:** Exposure of intermediate "Chain of Thought" (CoT) and logic steps.
 *   **Tool Calls:** Precise logging of which internal/external tools or APIs the agent invoked.
 *   **Memory Context:** A snapshot of short-term and long-term memory state at the moment of decision.
 
-### 🎯 Strategic Impact
-*   **Regulatory Compliance:** Provides the evidence required for **[Digital Operational Resilience Act (DORA)](https://www.eiopa.europa.eu/digital-operational-resilience-act-dora_en)**, or the **[EU AI Act](https://digital-strategy.ec.europa.eu/en/policies/regulatory-framework-ai)**
-*   **Trust & Validation:** Enables operators to validate autonomous decisions *before* escalation.
-*   **Rapid Debugging:** Accelerates failure analysis by pinpointing exactly where an agent's reasoning diverged from expected business logic.
 
-> **Architecture Note:** By using **Camunda 8** as the orchestrator, we move from "unreliable automation" to "governed autonomy." We don't just execute AI; we manage it within a strict BPMN container.
+## 📄Docs
 
-> **Disclaimer:** This repository is a reference architecture for educational and demonstrative purposes. It does not constitute a certified solution for specific regulatory frameworks. Users are responsible for conducting their own compliance audits (e.g., BaFin, DORA) before production use.
+- Architectural diagrams
+- Architectural decisions
+- Pictures
 
-## 🏗️ Technical Stack
-
-We prioritize **Single Source of Truth**, **Data Sovereignty**, and **Hardware Efficiency**.
-
-### Core Technologies
-| Category            | Technology | Rationale                                                                                |
-|:--------------------| :--- |:-----------------------------------------------------------------------------------------|
-| **Orchestrator**    | **Camunda 8 (Zeebe)** | Deterministic backbone; native logging for full audit trails.                            |
-| **Local AI Engine** | **Ollama** (Local) | On-prem inference ensuring sensitive data never leaves the facility.                     |
-| **IAM**             | **Keycloak** (OIDC) | Centralized security for all endpoints and AI interactions.                              |
-| **Database**        | **PostgreSQL** | Transactional consistency for process state and metadata (Camunda), IAM data (Keycloak). |
-| **Deployment**      | **K3s + ArgoCD** | Lightweight K8s with GitOps self-healing capabilities.                                   |
-
-## 🎯 Target Runtime Environments
-
-> **"One Stack, Any Scale"**  
-> This project follows a unified GitOps approach. Whether deploying to a high-power workstation or a power-efficient edge device, the architecture remains identical.
-
-| Pic                                                       | Environment            | Specs (Tested)                           | Use Case                                               |
-|:----------------------------------------------------------|:-----------------------|:-----------------------------------------|:-------------------------------------------------------|
-|                                                           | **High-Power Desktop** | 64 GB RAM / 16 GB VRAM (RTX)             | Development, Heavy Load Testing, Large LLMs            |
-| <img src="docs/sovereign-infra-jetson.jpg" width="300">   | **Edge AI (Jetson)**   | 16 GB Unified Memory (Orin Nano)         | Industrial Edge, Power-Efficient continuous operations |
-|                                                           | **Minimal / Laptop**   | 16 GB RAM (CPU only)                     | Proof of Concept, Local Process Testing                |
-
-### ⚙️ Multi-Platform Strategy
-Deployment is managed via **Helm profiles**, allowing seamless switching between resource-constrained and high-performance hardware:
-
-*   **Resource Efficiency:** JVM and PostgreSQL heap sizes are dynamically adjusted based on the target profile.
-*   **Hardware Acceleration:** Automatic detection and utilization of NVIDIA CUDA cores for LLM inference (where available).
-*   **Architecture Agnostic:** Full support for both `x86_64` and `arm64` (Multi-Arch Docker Images).
-
-### ⚖️ Architectural Decisions and Strategy
-
-#### Why use Agentic AI
-*	Usage saves time compared to traditional BPMN.
-
-#### Why Camunda over Open Source Forks (Operaton/CIB seven)?
-* **Future Unclear:** It is unclear if the forks will reach the critical mass required for long-term success and community support.
-* **Native Agentic Orchestration:** In Camunda 8, Agentic AI is integrated via dedicated Connectors and Ad-hoc Subprocesses. This provides out-of-the-box visibility in Camunda Operate and native analytics in Optimize. In many Open Source forks, agent logic often relies on external task workers, which can make it harder to maintain a "Single Source of Truth" for audit trails without significant custom development.
-* **Alignment with Sovereign AI Trends:** This stack aligns with the strategic shift toward Agentic Orchestration (as highlighted at Camunda Con 2026). By using the current industry standard, this architecture ensures compatibility with upcoming governance and AI-safety features that are critical for regulated environments.
-* **Commitment to Self-Managed Data Sovereignty:** While there is a strong industry trend toward SaaS, industries with high security requirements (FinTech, Defense) necessitate Self-Managed deployments. This stack is designed to leverage Camunda 8’s advanced features while maintaining 100% data sovereignty on-premises or in private clouds.
-* **Separation of Runtime and History Data:** Runtime data is stored in RocksDB (embedded within the Zeebe engine and optimized via RAM), while historical data is asynchronously exported to a secondary database. This architectural separation eliminates database transaction locks, ensures that heavy UI queries never slow down process execution, and significantly reduces the need for aggressive data cleanup strategies.
-* **Reduced Infrastructure Costs:** Decoupling execution from reporting eliminates the need to over-provision central databases for peak application loads. Additionally, a unified data model across the web UIs drastically reduces redundant data storage requirements.
-* **Distributed and Scalable Runtime:** The state across engine replicas is synchronized via the Raft consensus protocol. This enables seamless horizontal scaling of pods and high availability if individual nodes fail. Since the runtime nodes no longer depend on a centralized database, scaling up does not introduce database contention or performance bottlenecks.
-* **Eventual Consistency for Analytics:** By embracing eventual consistency between the execution engine (Zeebe) and the reporting tools (Operate/Optimize), the system guarantees maximum throughput and low latency for active processes. Temporary propagation delays in the UI are traded off for bulletproof runtime reliability under high load.
-
-#### Why No Spring AI?
-I evaluated Spring AI but deliberately excluded it to preserve architectural integrity:
-*   **Logic Decoupling:** Business logic belongs in the orchestration layer (`agentic-orchestrator`), not hardcoded in Java binaries. This allows for rapid prompt-tuning and model-swapping without redeploying the entire service.
-*   **Native Auditability:** Using the native Camunda Connector ensures that prompts, reasoning paths, and tool calls are logged directly into Zeebe/Operate for compliance audits.
-*   **Process Transparency:** Non-technical stakeholders can visualize agent decision paths directly in BPMN diagrams without parsing application logs.
-
-#### Why PostgreSQL over ElasticSearch/OpenSearch?
-I chose a relational database in combination with Camunda RDBMS-Exporter to optimize for **Data Integrity** and **Resource Efficiency**:
-*   **Compliance First:** Relational DBs (PostgreSQL) support ACID transactions, which are critical for maintaining a consistent audit trail for "Decision Trails."
-*   **Lower Footprint:** In local/edge environments, PostgreSQL offers a significantly smaller resource overhead compared to heavy NoSQL search engines.
-*   **Architectural Simplicity:** By consolidating metadata, IAM data (Keycloak), and process state into a single database technology, the operational complexity for air-gapped or resource-constrained deployments is drastically reduced.
-
-#### Why GitOps (ArgoCD)?
-I treat Infrastructure as Code rather than separate utility:
-*   **Unified State:** By embedding ArgoCD into the cluster logic itself, we eliminate external network dependencies and simplify self-healing mechanisms.
-*   **Scalability:** A single deployment strategy works from a laptop to an air-gapped server farm.
-
-## 🗺️ Roadmap & Phases
-
-- [x] **Phase 1:** [sovereign-infra](https://github.com/kj-hilger/sovereign-infra)
-- [ ] **Phase 2:** [cluster-gitops](https://github.com/kj-hilger/cluster-gitops)
-- [ ] **Phase 3:** `agentic-orchestrator`
 
 ---
 
